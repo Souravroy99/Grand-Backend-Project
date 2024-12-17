@@ -26,7 +26,7 @@ const userSchema = new Schema(
         index: true,
     },
     avatar: {
-        type: String, // Cloudinary URL
+        type: String, // Use --> Cloudinary URL, Should not use Buffer
         required: true,
     },
     coverImage: {
