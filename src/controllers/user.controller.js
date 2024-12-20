@@ -16,7 +16,7 @@ const registerUser = asyncHandler( async(req, res) => {
     // 9. Check for user creation
     // 10. return response
  
-
+ 
 
 // Step: 1
     const {username, email, fullName, password} = req.body ;
@@ -55,6 +55,8 @@ const registerUser = asyncHandler( async(req, res) => {
 // Step: 5
     const avatar = await uploadOnCloudinary(avatarLocalPath);
     const coverImage = await uploadOnCloudinary(coverImageLocalPath);
+
+    // console.log('step5 :', avatar) ;
 
 // Step: 6
     if(!avatar) {
