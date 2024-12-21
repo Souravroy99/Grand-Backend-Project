@@ -52,6 +52,7 @@ const userSchema = new Schema(
 );
  
 
+// This code works like middleware and is an example of a Mongoose pre-hook.
 userSchema.pre("save", async function(next) {
     if(this.isModified("password"))
     {
