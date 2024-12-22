@@ -195,15 +195,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async(req, res) => {
     const id = req.user._id ;
-    await User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         id,
         {
             $set: {
-                refreshToken: undefined 
+                refreshToken: ""
             }       
         },
         {
-            new: true
+            new: true // Returns the updated user
         }
     );
 
@@ -254,7 +254,7 @@ const refreshAccessToken = asyncHandler(async(req,res) => {
         .json(
             new ApiResponse(
                 200, 
-                {accessToken, newRefreshToken},
+                {accessToken, refreshToken: newRefreshToken},
                 "Access token successfully refreshed"
             )
         )
