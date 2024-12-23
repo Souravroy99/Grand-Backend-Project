@@ -323,12 +323,12 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
     const avatarLocalPath = req.file?.path
 
     if(!avatarLocalPath) {
-        throw new ApiError(400, "Avatar file not found")
+        throw new ApiError(400, "Avatar file required")
     }
 
     const avatar = uploadOnCloudinary(avatarLocalPath)
     if(!avatar.url) {
-        throw new ApiError(400, "Error while uploading avatar on cloudinary")
+        throw new ApiError(500, "Error while uploading avatar on cloudinary")
     }
 
     const user = await User.findByIdAndUpdate(
@@ -345,7 +345,7 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 
 
     return res.status(200).json(new ApiResponse(200, user, "Avatar updated successfully"));
-})
+});
 
 const updateUserCoverImage = asyncHandler(async(req, res) => {
     const coverImageLocalPath = req.file?.path
@@ -373,7 +373,7 @@ const updateUserCoverImage = asyncHandler(async(req, res) => {
 
 
     return res.status(200).json(new ApiResponse(200, user, "Cover Image updated successfully"));
-})
+});
 
 export {
     registerUser,
