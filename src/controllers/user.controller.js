@@ -389,6 +389,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
             }
         },
         {
+            // Try to finding subscriber's count
             $lookup: {
                 from: "subscriptions",
                 localField: "_id",
@@ -397,6 +398,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
             }
         },
         {
+            // Try to finding the count of channels that I have subscribed
             $lookup: {
                 from: "subscriptions",
                 localField: "_id",
@@ -434,7 +436,7 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
             }
         }
     ])
-    console.log(channel);
+    console.log(channel) ;
 
     if(!(channel?.length)) {
         throw new ApiError(404, "Channel does not exists");
