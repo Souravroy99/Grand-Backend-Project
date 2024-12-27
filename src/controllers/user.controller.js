@@ -445,6 +445,56 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
     return res.status(200).json(new ApiResponse(200, channel[0], "User channel fetched successfully"));
 });
 
+const getWatchHistory = asyncHandler(async(req, res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                // _id: req.user._id  // This is wrong, because ----> Mongoose automatically converts ObjectId fields to strings in req.user._id, which causes issues during aggregation because MongoDB expects _id to be of type ObjectId.
+                    
+                _id: new mongoose.Types.ObjectId(req.user._id)   // This is correct
+            }
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "watchHistory",
+                pipeline: [
+                    {
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {  // Why here, try all possible combination to learn
+                                        fullName: 1,
+                                        username: 1,
+                                        avatar: 1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields: {
+                            $owner: {
+                                $first: "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]);
+
+    return res.status(200).json(
+        new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully")
+    )
+});
+
 
 export {
     registerUser,
@@ -456,5 +506,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
