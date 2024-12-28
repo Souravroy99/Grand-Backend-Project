@@ -4,6 +4,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+
+
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -23,6 +26,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         );
     }
 };
+
 
 const registerUser = asyncHandler(async (req, res) => {
     // 1. Get user details
@@ -201,7 +205,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     const user = await User.findByIdAndUpdate(
         id,
         {
-            $set: {
+            $unset: {
                 refreshToken: "",
             },
         },
@@ -223,8 +227,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-    const incomingRefreshToken =
-        req.cookies.refreshToken || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
     if (!incomingRefreshToken) {
         throw new ApiError(401, "Unauthorized request");
@@ -251,17 +254,18 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             secure: true,
         };
 
-        const { accessToken, newRefreshToken } =
-            await generateAccessAndRefreshTokens(user._id);
+        const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(user._id);
+        
+        console.log(refreshToken) ;
 
         return res
             .status(200)
-            .cookie("accessToken", accessToken)
-            .cookie("refreshToken", newRefreshToken)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
             .json(
                 new ApiResponse(
                     200,
-                    { accessToken, refreshToken: newRefreshToken },
+                    { accessToken, refreshToken },
                     "Access token successfully refreshed"
                 )
             );
@@ -326,7 +330,7 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
         throw new ApiError(400, "Avatar file required")
     }
 
-    const avatar = uploadOnCloudinary(avatarLocalPath)
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
     if(!avatar.url) {
         throw new ApiError(500, "Error while uploading avatar on cloudinary")
     }
@@ -349,12 +353,14 @@ const updateUserAvatar = asyncHandler(async(req, res) => {
 
 const updateUserCoverImage = asyncHandler(async(req, res) => {
     const coverImageLocalPath = req.file?.path
+    console.log(coverImageLocalPath)
 
     if(!coverImageLocalPath) {
         throw new ApiError(400, "Avatar file not found")
     }
 
-    const coverImage = uploadOnCloudinary(coverImageLocalPath)
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+    console.log(coverImage)
     if(!coverImage.url) {
         throw new ApiError(400, "Error while uploading cover image on cloudinary")
     }
@@ -408,15 +414,15 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
         },
         {
             $addFields: {
-                subscribersCount: { 
-                    $size: "subscribers",
+                subscribersCount: {
+                    $size: { $ifNull: ["$subscribers", []] }, // Ensure it is an array
                 },
                 channelsSubscribedToCount: {
-                    $size: "$subscribedTo",
+                    $size: { $ifNull: ["$subscribedTo", []] }, // Ensure it is an array
                 },
                 isSubscribed: {
                     $cond: {
-                        if: {$in: [req.user?.id, "$subscribers.subscriber"]},
+                        if: { $in: [req.user?.id, { $ifNull: ["$subscribers.subscriber", []] }] },
                         then: true,
                         else: false
                     }
@@ -446,6 +452,9 @@ const getUserChannelProfile = asyncHandler(async(req, res) => {
 });
 
 const getWatchHistory = asyncHandler(async(req, res) => {
+
+    // Need to learn Aggregation Pipeline
+
     const user = await User.aggregate([
         {
             $match: {
@@ -473,14 +482,14 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                                         fullName: 1,
                                         username: 1,
                                         avatar: 1
-                                    }
-                                }
-                            ]
-                        }
+                                    },
+                                },
+                            ],
+                        },
                     },
                     {
                         $addFields: {
-                            $owner: {
+                            owner: {
                                 $first: "$owner"
                             }
                         }
