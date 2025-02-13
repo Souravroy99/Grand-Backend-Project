@@ -7,14 +7,13 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 
-
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
         const user = await User.findById(userId);
 
         const accessToken = await user.generateAccessToken();
         const refreshToken = await user.generateRefreshToken();
-
+  
         user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
 
@@ -95,7 +94,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (req.files && Array.isArray(req.files.coverImage)) {
         coverImageLocalPath = req.files.coverImage[0].path;
     }
-
+                 
     // Step: 4
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file is required --> Multer");
@@ -137,7 +136,7 @@ const registerUser = asyncHandler(async (req, res) => {
     return res
         .status(201)
         .json(
-            new ApiResponse(200, createdUser, "User registered Successfully")
+            new ApiResponse(201, createdUser, "User registered Successfully")
         );
 });
 

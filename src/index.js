@@ -1,7 +1,7 @@
 import {connectDB} from "./db/index.js" ;
 import { app } from "./app.js";
 
-connectDB()
+connectDB() 
 .then(() => {
     const PORT = process.env.PORT || 1331 ; 
 
@@ -9,7 +9,7 @@ connectDB()
         console.log("ERR: ", error);
         throw error ;
     })                  
-
+ 
     app.listen(PORT, () => {
         console.log(`Server is running at: ${PORT}`);
     })
