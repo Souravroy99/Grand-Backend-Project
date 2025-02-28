@@ -6,7 +6,7 @@ connectDB()
     const PORT = process.env.PORT || 1331 ; 
 
     app.on("error", (error) => {
-        console.log("ERR: ", error);
+        console.log("ERR: ", error); 
         throw error ;
     })                  
  
